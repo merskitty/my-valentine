@@ -1,0 +1,779 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+		<title>My angel</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+		<style>
+
+
+		#musicControl {
+			transition: transform 0.1s ease;
+		}
+
+		#musicControl:active {
+			transform: scale(0.95);
+		}
+
+	
+   		#loveletter {
+        	display: none; /* Initially hide the letter section */
+    	}
+		img {
+			opacity: 1 !important; /* Ensure full opacity */
+			filter: none !important; /* Remove any filter effects */
+		}
+		
+</style>
+	</head>
+	<body class="is-preload">
+		<!-- Add this right after <body> -->
+<div id="loader">
+    <style>
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+        
+        .loader-heart {
+            width: 50px;
+            height: 50px;
+            position: relative;
+            animation: loader-beat 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+        
+        .loader-heart:before,
+        .loader-heart:after {
+            content: '';
+            background: #ff3366;
+            width: 30px;
+            height: 45px;
+            border-radius: 30px 30px 0 0;
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: rotate(-45deg);
+            transform-origin: 0 100%;
+        }
+        
+        .loader-heart:after {
+            left: 0;
+            transform: rotate(45deg);
+            transform-origin: 100% 100%;
+        }
+
+        @keyframes loader-beat {
+            0% { transform: scale(0.95); }
+            5% { transform: scale(1.1); }
+            39% { transform: scale(0.85); }
+            45% { transform: scale(1); }
+            60% { transform: scale(0.95); }
+            100% { transform: scale(0.9); }
+        }
+    </style>
+    <div class="loader-heart"></div>
+</div>
+
+<script>
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        const loader = document.getElementById('loader');
+        loader.style.opacity = '0';
+        setTimeout(() => loader.style.display = 'none', 500);
+    }, 2000);
+});
+</script>
+<audio id="bgMusic" loop autoplay>
+    <source src="assets/music/iwannabeyours.mp3" type="audio/mp3">
+    Your browser does not support the audio element.
+</audio>
+
+<div id="musicControl" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000; cursor: pointer; padding: 15px;">
+    <i class="fas fa-volume-up" style="font-size: 30px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const music = document.getElementById('bgMusic');
+    const musicControl = document.getElementById('musicControl');
+    let isPlaying = false;
+    const fadeDuration = 2000;
+    let fadeInterval;
+
+    // Add scroll event listener to start music
+    window.addEventListener('scroll', function startMusic() {
+        if (!isPlaying) {
+            music.play().then(() => {
+                fadeIn();
+                isPlaying = true;
+            }).catch(error => {
+                console.log('Playback failed:', error);
+            });
+            // Remove the scroll listener after first trigger
+            window.removeEventListener('scroll', startMusic);
+        }
+    }, { once: true });
+
+    // Fade in function
+    function fadeIn() {
+        clearInterval(fadeInterval);
+        music.volume = 0;
+        const fadeTarget = 0.2; // Target volume
+        const steps = 20; // Number of steps in the fade
+        const increment = fadeTarget / steps;
+        let currentVolume = 0;
+
+        fadeInterval = setInterval(() => {
+            currentVolume = Math.min(fadeTarget, currentVolume + increment);
+            music.volume = currentVolume;
+            
+            if (currentVolume >= fadeTarget) {
+                clearInterval(fadeInterval);
+            }
+        }, fadeDuration / steps);
+    }
+
+    // Fade out function
+    function fadeOut() {
+        return new Promise((resolve) => {
+            clearInterval(fadeInterval);
+            const startVolume = music.volume;
+            const steps = 20;
+            const decrement = startVolume / steps;
+            let currentVolume = startVolume;
+
+            fadeInterval = setInterval(() => {
+                currentVolume = Math.max(0, currentVolume - decrement);
+                music.volume = currentVolume;
+                
+                if (currentVolume <= 0) {
+                    clearInterval(fadeInterval);
+                    music.pause();
+                    resolve();
+                }
+            }, fadeDuration / steps);
+        });
+    }
+
+    // Toggle music control with both click and touch events
+    ['click', 'touchstart'].forEach(eventType => {
+        musicControl.addEventListener(eventType, async function(e) {
+            e.preventDefault();
+            if (music.paused) {
+                music.volume = 0;
+                await music.play();
+                fadeIn();
+                musicControl.innerHTML = '<i class="fas fa-volume-up" style="font-size: 30px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>';
+            } else {
+                // Immediate stop when mute button is clicked
+                clearInterval(fadeInterval);
+                music.pause();
+                music.volume = 0;
+                musicControl.innerHTML = '<i class="fas fa-volume-mute" style="font-size: 30px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>';
+            }
+        });
+    });
+
+    // Optional: Handle page unload
+    window.addEventListener('beforeunload', async function(e) {
+        if (!music.paused) {
+            await fadeOut();
+        }
+    });
+});
+</script>
+
+<!-- Make sure Font Awesome is included -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+		<!-- Header -->
+			<header id="header">
+				<h1>For my fiancé<3</h1>
+				<nav>
+					<ul>
+						<li><a href="#intro">Intro</a></li>
+						<li><a href="#one">Why...?</a></li>
+						<li><a href="#two">Content</a></li>
+						<li><a href="#game">Quiz</a></li>
+						<li><a href="#work">Our ships</a></li>
+						<li><a href="#footer">The end</a></li>
+					</ul>
+				</nav>
+			</header>
+
+		<!-- Intro -->
+		<section id="intro" class="main style1 dark fullscreen">
+			<video class="video-bg" autoplay muted loop playsinline>
+				<source src="mp4/background_intro.mp4" type="video/mp4">
+			</video>
+			<div class="bottom-gradient"></div>
+			<div class="content">
+        <header>
+            <h2>Hey doll,</h2>
+        </header>
+        <p>Welcome to <strong>our place</strong> —a little world I built just for you, <strong>my love</strong>.
+            Every piece of this website holds a part of my heart, every detail is made with <strong>you</strong> in mind.
+            I spent hours perfecting this because you mean that much to me. 
+            I wanted to create something that stays <strong>forever</strong>—just like my love for you. 
+            So take your time, explore, and feel every word, every beat of my heart that i poured into this space. 
+            Because this? This is all for <strong>YOU</strong>.</p>
+    </div>
+    <a href="#one" class="button style2 down anchored">Next</a>
+</section>
+
+		<!-- One -->
+		<section id="one" class="main style2 right dark fullscreen">
+		<video class="video-bg" autoplay muted loop playsinline>
+			<source src="mp4/bacground_one.mp4" type="video/mp4">
+		</video>
+		<div class="top-gradient"></div>
+    <div class="bottom-gradient"></div>
+		<div class="content box style2">
+					<header>
+						<h2>My dear fiancé</h2>
+					</header>
+					<p>Every day with you feels like a gift I never want to take for granted.  
+						our presence fills my world with warmth, laughter, and a love deeper than words can express. 
+						No matter where life takes us, I want to be by your side, holding your hand through it all. 
+						You are my heart, my home, and the reason I believe in love the way I do. 
+						I love you so much, my puppy.<br>
+
+				<a href="#two" class="button style2 down anchored">Next</a>
+			</section>
+
+		<!-- Two -->
+		<section id="two" class="main style2 left dark fullscreen">
+			<video class="video-bg" autoplay muted loop playsinline>
+				<source src="mp4/background_two.mp4" type="video/mp4">
+			</video>
+			<div class="top-gradient"></div>
+			<div class="bottom-gradient"></div>
+			<div class="content box style2">
+					<header>
+						<h2>Contents</h2>
+					</header>
+					<p>A Quiz – Solve it to unlock a special surprise!<br>
+						<br>Love Letter - straight out of my heart<br>
+
+						<br>Our Ships – A place where some of our ships can be found, with little notes to make you smile.<br>
+						
+						<br>Final message - A question i wanted to ask you</p>
+				</div>
+			</section>
+			<!-- Guessing Game Section -->
+<section id="game" class="main style2 dark fullscreen">
+	<div class="top-memories-gradient"></div>
+    <div class="content box style2">
+        <header style="text-align: center;">
+            <h2 style="font-size: 3em; margin-bottom: 0.5em;">A quiz about us!</h2>
+            <p>finish this little quiz to unlock a surprise</p>
+        </header>
+        <div id="game-container" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div id="game-content" style="text-align: center;">
+                <p id="hint" style="font-size: 1.2em; margin-bottom: 20px;"></p>
+                <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+                    <input type="text" id="guess-input" placeholder="Type your answer..." 
+                        style="
+                            width: 300px;
+                            padding: 12px 15px;
+                            border-radius: 8px;
+                            border: 2px solid #333;
+                            text-align: center;
+                            font-size: 1em;
+                            background: rgba(255, 255, 255, 0.9);
+                            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                            transition: all 0.3s ease;
+                            outline: none;
+                        "
+                        onfocus="this.style.borderColor='#ff3366'; this.style.boxShadow='0 2px 15px rgba(255, 51, 102, 0.2)';"
+                        onblur="this.style.borderColor='#333'; this.style.boxShadow='0 2px 10px rgba(0, 0, 0, 0.1)';">
+                </div>
+                <button onclick="checkAnswer()" class="special-button"
+                    style="
+                        padding: 8px 20px;
+                        background: linear-gradient(45deg, #ff3366, #ff6b6b);
+                        color: #ffffff;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 0.9em;
+                        letter-spacing: 2px;
+                        text-transform: uppercase;
+                        transition: all 0.3s ease;
+                        margin-top: 10px;
+                        box-shadow: 0 4px 15px rgba(255, 51, 102, 0.3);
+                        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
+                        min-width: 100px;
+                        height: 35px;
+                    "
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255, 51, 102, 0.4)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255, 51, 102, 0.3)';">
+                    Submit
+                </button>
+                <p id="result" style="margin-top: 20px; min-height: 24px;"></p>
+                <p id="score" style="margin-top: 10px;">Score: 0</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+const questions = [
+    {
+        hint: "Name a nickname that i have for you!",
+        answers: ["puppy", "Puppy", "doll", "hyung", "gege", "hyungie"], // All in lowercase
+        feedback: "you did amazing!"
+    },
+    {
+        hint: "What was the first ship we did?",
+        answers: ["guke", "guria"], // All in lowercase
+        feedback: "That was too easy, wasn't it?"
+    },
+    {
+        hint: "What expression do i use the most",
+        answers: ["fuck off", "mhh", "hehe"], // All in lowercase
+        feedback: "Am i that predictable"
+    },
+	{
+        hint: "Whats the first thing i admired about you when we met?",
+        answers: ["aesthetic", "dedication", "talent","cuteness","beauty","respectful", "everything","eyes","smile","hair","attitude","existence"], // All in lowercase
+        feedback: "There wasn't just one thing"
+    },
+	{
+        hint: "What do you usually call me the most?",
+        answers: ["princess", "baby"], // All in lowercase
+        feedback: "Yay, you did it!"
+    },
+	{
+        hint: "When is our anniversary?",
+        answers: ["10th oct","10 oct","10 october","10th october", "october 10"], // All in lowercase
+        feedback: "yayayayayayayay good job"
+    },
+	{
+        hint: "What's my full name?",
+        answers: ["kang myungdae", "myungdae kang"], // All in lowercase
+        feedback: "I'm impressed that you remembered it!"
+    },
+	{
+        hint: "Do you wanna see the letter?",
+        answers: ["yes", "yeah", "hmm","mmhmm","yess","of course","obviously","yes babe","yes of course"], // All in lowercase
+        feedback: "Okay..."
+    },
+	{
+        hint: "Do you really wanna see it ? ",
+        answers: ["yes", "yeah", "hmm","mmhmm","yess","of course","obviously","yes babe","yes of course"], // All in lowercase
+        feedback: "Mhh, not convinced"
+    },
+	{
+        hint: "Are you sure that you wanna see it?",
+        answers: ["yes", "yeah", "hmm","mmhmm","yess","of course","obviously","yes i am","yes i do"], // All in lowercase
+        feedback: "I see..."
+    },
+	{
+        hint: "Do you love me ?",
+        answers: ["yes", "yeah", "hmm","mmhmm","yess","of course","obviously","yes i am","yes i do","i love you","yes i love you","i love you the most"], // All in lowercase
+        feedback: "Okay, here we go!"
+    },
+    
+];
+
+let currentQuestionIndex = 0;
+let score = 0;
+
+function startGame() {
+    if (currentQuestionIndex < questions.length) {
+        document.getElementById('hint').textContent = questions[currentQuestionIndex].hint;
+        document.getElementById('guess-input').value = '';
+        document.getElementById('result').textContent = '';
+    } else {
+        document.getElementById('game-content').innerHTML = `
+            <h3>Game Complete!</h3>
+            <p>You got ${score} out of ${questions.length} correct!</p>
+            <p>You're the best fiancé, mwah </p>
+            <p style="margin-top: 20px; color: #ff3366;">✨ Your love letter has been unlocked! ✨</p>
+        `;
+        
+        // Unlock the letter section
+        document.getElementById('loveletter').style.display = 'block';
+        
+        // Smooth scroll to letter section after a short delay
+        setTimeout(() => {
+            document.getElementById('loveletter').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }, 2000);
+    }
+}
+
+
+
+function checkAnswer() {
+    const userGuess = document.getElementById('guess-input').value.toLowerCase().trim();
+    const currentQuestion = questions[currentQuestionIndex];
+    
+    if (currentQuestion.answers.includes(userGuess)) {
+        document.getElementById('result').innerHTML = `
+            <span style="color: #00ff00;">${currentQuestion.feedback}</span>
+        `;
+        score++;
+        document.getElementById('score').textContent = `Score: ${score}`;
+        
+        setTimeout(() => {
+            currentQuestionIndex++;
+            startGame();
+            
+            // Check if quiz is complete
+            if (currentQuestionIndex >= questions.length) {
+                // Add class to work section
+                document.getElementById('work').classList.add('letter-unlocked');
+            }
+        }, 2000);
+    } else {
+        document.getElementById('result').innerHTML = `
+            <span style="color: #ff3366;">oopsie, its okay youre just a baby. try again </span>
+        `;
+    }
+}
+
+// Allow Enter key to submit answer
+document.getElementById('guess-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        checkAnswer();
+    }
+});
+
+// Start the game when the page loads
+document.addEventListener('DOMContentLoaded', startGame);
+</script>
+
+
+		<!-- Love Letter -->
+		<section id="loveletter" class="main style2 dark fullscreen">
+			<div class="content box style2 letter-container">
+				<header style="text-align: center;">
+					<h2 style="color: #fff;">Dear hyung,</h2>
+				</header>
+				<div id="typed-letter" style="
+					text-align: left;
+					line-height: 1.8;
+					font-size: 1.1em;
+					white-space: pre-line;
+					position: relative;
+					z-index: 1;
+				"></div>
+			</div>
+		</section>
+
+<style>
+#loveletter {
+    display: none; /* Initially hidden until quiz completion */
+}
+
+.letter-container {
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                url('images/letter-bg.jpg') center center;
+    background-size: cover;
+    position: relative;
+    min-height: 100vh;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    margin: 20px;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.letter-container:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+#typed-letter {
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+@media screen and (max-width: 736px) {
+    .letter-container {
+        margin: 10px;
+        padding: 20px;
+    }
+}
+</style>
+    </div>
+    <a href="#memories" class="button style2 down anchored">Next</a>
+</section>
+
+
+				<!-- Work -->
+				<section id="work" class="main style3">
+					<div class="video-container">
+						<video class="video-bg" autoplay muted loop playsinline>
+							<source src="mp4/background_two2.mp4" type="video/mp4">
+						</video>
+					</div>
+					<div class="content">
+						<header>
+							<h2>Our ships</h2>
+							<p>From the moment you entered my life, everything became brighter. Your presence brings warmth to my days, and your love fills my heart in ways I never thought possible. Every little thing about you, from your smile to the way you speak, makes me fall for you over and over again. 
+								I cherish every moment we share, whether it’s a deep conversation or a simple glance that says more than words ever could. You have a way of making even the smallest moments feel special, and with you, happiness feels effortless. You are my safe place, my greatest joy, and the love I never knew I needed.
+								Loving you has been the most beautiful journey, and I can’t wait to continue writing our story together. I want to share dreams, laughter, and quiet moments that turn into lifelong memories. No matter where life takes us, my heart will always be yours.</p>
+								<p>So today, and every day, I want you to know how deeply I love you. You are my home, my happiness, and the best thing that has ever happened to me. ❤️</p>
+						</header>
+						<div class="modern-gallery-container">
+							<!-- Image 1 -->
+							<div class="gallery-item">
+								<img src="ships/guke4.jpg" alt="Our First memory">
+								<div class="gallery-caption">
+									<p>You are the most beautiful part of my everyday.</p>
+								</div>
+							</div>
+						
+							<!-- Image 2 -->
+							<div class="gallery-item">
+								<img src= "ships/guke1.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>Your smile is my favorite sight in the world</p>
+								</div>
+							</div>
+						
+							<!-- Image 3 -->
+							<div class="gallery-item">
+								<img src="ships/choker1.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>My heart belongs to you, now and always. ❤️</p>
+								</div>
+							</div>
+							<!-- Image 1 -->
+							<div class="gallery-item">
+								<img src="ships/mahae2.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>Every moment with you feels like a warm embrace.</p>
+								</div>
+							</div>
+						
+							<!-- Image 2 -->
+							<div class="gallery-item">
+								<img src="ships/mahae4.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>You make my heart race and feel at peace at the same time.</p>
+								</div>
+							</div>
+						
+							<!-- Image 3 -->
+							<div class="gallery-item">
+								<img src="ships/harumaki2.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>Loving you is the easiest and most wonderful thing I've ever done.</p>
+								</div>
+							</div>
+
+							<!-- Image 1 -->
+							<div class="gallery-item">
+								<img src="ships/harumaki3.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>You are my safe place, my happiness, and my greatest adventure.</p>
+								</div>
+							</div>
+							
+							<!-- Image 1 -->
+							<div class="gallery-item">
+								<img src="ships/jaemjen1.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>Just hearing your voice makes my day instantly better. </p>
+								</div>
+							</div>
+
+							<div class="gallery-item">
+									<img src="ships/jaemjen4.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>If love had a face, it would look exactly like you.</p>
+								</div>
+							</div>
+						
+						
+						
+							<!-- Image 2 -->
+							<div class="gallery-item">
+								<img src="ships/on2eus2.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>Every little thing about you makes me fall in love all over again.</p>
+								</div>
+							</div>
+						
+							<div class="gallery-item">
+									<img src="ships/on2eus3.jpg" alt="Our First Memory">
+								<div class="gallery-caption">
+									<p>You are the dream I never want to wake up from.</p>
+								</div>
+							</div>
+					
+							</div>
+							
+							
+							
+							
+								
+
+						</div>
+						
+							
+						
+					</div>
+					<div class="memories-bottom-gradient"></div>
+					
+				</section>
+
+							<!-- Final Section -->
+							<section id="final" class="main style2 dark fullscreen">
+								<!-- Add video container -->
+								<div class="video-container">
+									<video class="video-bg" autoplay muted loop playsinline>
+										<source src="mp4/background_end.mp4" type="video/mp4">
+									</video>
+								</div>
+					<div class="content box style2">
+						<div class="ending-message">
+							<header>
+								<h2>My Love...</h2>
+							</header>
+							
+							<div class="final-words">
+								<p>From the moment you entered my life, everything has felt warmer, brighter, and more meaningful. Every day with you is a gift I never take for granted.You make even the simplest moments feel extraordinary, and with every laugh, every touch, every conversation, I find myself falling for you all over again.
+                                    
+                                    I love the way you see the world, the kindness in your heart, and the way you make me feel like the most special person in the universe. With you, I feel safe, understood, and deeply loved. You’ve become my favorite thought in the morning and the last thing on my mind at night.
+                                    
+                                    This journey together has been nothing short of magical, and I can't wait to create more memories with you. To hold your hand, to dream by your side, and to cherish every moment we share.
+                                    
+                                    So today, with all my heart, I want to ask you—will you be my Valentine? ❤️</p>
+								
+								<div class="final-quote">
+									<p>i love you with every part of me.</p>
+								</div>
+								
+								<div class="signature">
+									<p>Forever Yours,</p>
+									<p>Suyou</p>
+									<p>🤍</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+			
+				
+		
+		
+
+		<!-- Footer -->
+			<footer id="footer">
+
+
+				<!-- Menu -->
+					<ul class="menu">
+						<li>&copy; My puppy<3</li><li> made by: your annoying fiancé
+					</ul>
+
+			</footer>
+
+		<!-- Scripts -->
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const letterText = `I don’t even know where to start cuz words are not my thing lol. 
+        Every day with you feels like a blessing, a beautiful chapter in a story I never want to end. From the moment you came into my life, you filled it with warmth, laughter, 
+        and a love so pure that I sometimes wonder how I ever lived without it. You are the light that brightens my world, 
+        the comfort that soothes my soul, and the reason my heart beats a little faster every time I see you.
+
+        I love the way you make even the simplest moments feel special. Whether we're talking for hours or just sitting in silence, every second spent with you is a treasure. 
+        Your presence alone is enough to make everything feel right, as if the whole world fades away and all that matters is us.
+        You have this beautiful way of making me feel loved, safe, and truly understood, and for that, I am endlessly grateful.
+
+        There are so many things I adore about you—your kindness, your strength, your laughter that feels like music to my ears.
+        The way you care, not just for me but for everything and everyone around you, is something truly special. 
+        You have a heart that shines so brightly, and I am so lucky to be the one who gets to love you and be loved by you.
+
+        No matter what life brings, I want you to know that I will always be here, by your side, through every high and low. 
+        I want to keep making memories, dreaming together, and building a love that only grows stronger with time. You are my greatest happiness, my home, my forever.
+
+        So today, and always, I want you to know this: you are my heart, my happiness, and the love of my life.
+        I will never stop being grateful for you, and I will never stop choosing you, again and again. ❤️
+
+        Always yours,  
+        Myungdae`;
+
+        let hasStartedTyping = false;
+
+        function typeLetter() {
+            let i = 0;
+            const interval = setInterval(() => {
+                $('#typed-letter').html(letterText.substring(0, i + 1)); // Typing effect
+                i++;
+                if (i >= letterText.length) {
+                    clearInterval(interval); // Stop when done
+                }
+            }, 50);
+        }
+
+        // Detect when the letter section is in view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !hasStartedTyping) {
+                    hasStartedTyping = true;
+                    typeLetter();
+                }
+            });
+        }, { threshold: 0.5 });
+
+        observer.observe(document.getElementById('typed-letter'));
+    });
+
+	// Add this to your script
+music.addEventListener('loadstart', function() {
+    musicControl.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size: 30px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>';
+});
+
+music.addEventListener('canplaythrough', function() {
+    if (music.paused) {
+        musicControl.innerHTML = '<i class="fas fa-volume-mute" style="font-size: 30px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>';
+    } else {
+        musicControl.innerHTML = '<i class="fas fa-volume-up" style="font-size: 30px; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);"></i>';
+    }
+});
+</script>
+</script>
+			</script>
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.poptrox.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+			
+
+	</body>
+</html>
